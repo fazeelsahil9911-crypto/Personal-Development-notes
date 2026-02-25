@@ -1,0 +1,37 @@
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+name: pathnex-pod
+spec:
+containers:
+- name: nginx
+image: nginx:latest
+ports: 
+- containerPort: 80
+
+## Deployment YAML 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: pathnex-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pathnex
+  template:
+    metadata:
+      labels:
+        app: pathnex
+    spec:
+      containers:
+      - name: pathnexc
+        image: nginx:latest
+        ports: 
+        - containerPort: 80
+
+## Repli
+ 

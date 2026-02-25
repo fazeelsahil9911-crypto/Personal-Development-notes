@@ -1,0 +1,11 @@
+YAML
+
+apiVersion: argoproj.io/v1a1pha1
+kind: Application
+spec:
+  source:
+    repoURL: https://github.com/org/repo
+    path: manifests/
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production

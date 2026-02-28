@@ -1,0 +1,15 @@
+YAML
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostpath:
+     path: /mnt/data

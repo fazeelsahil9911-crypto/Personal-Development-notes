@@ -1,0 +1,19 @@
+YAML
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        patchType: Prefix
+        backend:
+          service:
+            name: myapp-service
+            port:
+              number: 80
+      

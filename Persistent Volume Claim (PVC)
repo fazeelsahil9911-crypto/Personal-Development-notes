@@ -1,0 +1,42 @@
+YAML
+
+apiVersion: v1
+kindL PersistenVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: manual
+  resources:
+    requests:
+      storage: 2Gi
+
+## Pod with Volume Mount (Bind to PVC)
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+spec:
+  containers:
+    - name: my-container
+      image: nginx
+      volumeMounts:
+         - name: my-storage
+           mountPath: /usr/share/nginx/html
+  volumes:
+    - name: my-storage
+      persistenVolumeClaim:
+        ClaimName: my-pvc
+
+
+
+
+
+
+
+
+
+

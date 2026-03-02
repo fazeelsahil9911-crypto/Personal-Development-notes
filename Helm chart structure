@@ -1,0 +1,11 @@
+CODE 
+
+MYCHART       # Root directory of the chart
+Chart.yaml    # Metadata about the chart (name, version, description)
+values.yaml   # Default configuration values
+charts/       # Directory for dependent charts
+templates     # Directory containing kubernetes manifest templates
+    deployment.yaml
+    service.yaml
+    other resource template
+README.md     # Optional documentation

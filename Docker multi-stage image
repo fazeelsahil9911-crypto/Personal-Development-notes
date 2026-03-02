@@ -1,0 +1,23 @@
+# Build stage
+FROM node:18 AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Deploy stage
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+========================================================================
+# Build stage
+FROM node:18 AS build
+WORKDIR /app
+COPY Package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Deploy stage
+FROM nginx:alpine
+COPY --from=build /aap/dist /user/share/nginx/html

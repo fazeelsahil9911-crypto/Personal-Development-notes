@@ -1,0 +1,24 @@
+## Example playbook(Dynamic Package Install)
+
+hosts: all
+become: yes
+tasks:
+  - name: Install package dynamically 
+    apt:
+      name: "{{ package }}"
+      state: present
+
+##run command ansible-playbook install.yml --extra-vars "package=nginx"
+## Alternartive (Interactive Prompt)
+## If you want Ansible to ask every time:
+YAML
+hosts: all
+become: yes
+vars_prompt:
+  - name: package
+    prompt: "Enter package name"
+tasks:
+  - name: Install package dynamically
+    apt:
+      name: "{{ package }}"  
+      state: present

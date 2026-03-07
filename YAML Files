@@ -1,0 +1,269 @@
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: pathnex-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+## Deployment
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathnex-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pathnex
+  template:
+    metadata:
+      labels:
+        app: pathnex
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+## Replicaset ##
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: pathnex-replicaset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pathnex
+  template:
+    metadata:
+      labels:
+        app: pathnex
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+## StatefulSet
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pathnex-statefulset
+spec:
+  serviceName: "pathnex"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pathnex
+  template:
+    metadata:
+      labels:
+        app: pathnex
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+## DeamonSet ##
+
+apiVersion: apps/v1
+kind: DeamonSet
+metadata:
+  name: pathnex-deamonset
+spec:
+  selector:
+    matchLabels:
+      app: pathnex
+  template:
+    metadata:
+      labels:
+        app: pathnex
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+## Job ##
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pathnex-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        command: ["sh", "-c", "echo Hello, Kubernetes!"]
+      restartPolicy: Never
+
+## CronJob ##
+
+apiVersion: batch/v1
+kind: Cronjob
+metadata:
+  name: pathnex-cronjob
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: busybox
+            image: busybox
+            command: ["sh", "-c", "echo Hello, Kubernetes!"]
+          restartPolicy: OnFailure
+
+## Service ## 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: pathnex-service
+spec:
+  selector:
+    app: pathnex
+  ports:
+  - protocol: TCP 
+    port: 80 
+    targetPort: 80
+  type: ClusterIP
+
+## INGRESS ##
+
+apiVersion: netwroking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pathnex-ingress
+spec:
+  rules:
+  - host: pathnex.com
+    http: 
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pathnex-service
+            port:
+              number: 80
+
+## ConfigMap  ##
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pathnecx-configmap
+data:
+  key1: value1
+  key2: value2
+
+##  Secret  ##
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pathnex-secret
+type: Opaque
+data:
+  username: YWRtaW4= # "admin"
+  password: cGFzc3dvcmQ= # "password"
+
+## PersistentVolume ##
+
+apiVersion: v1
+kind: PersitentVolume
+metadata:
+  name: pathnex-pv
+spec:
+  capacity 
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/tmp/data"
+
+## PersistentVolumeClaim ##
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pathnex-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+## Namespace ## 
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pathnex-namespace
+
+## NetworkPolicy ## 
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pathnex-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      appL pathnex
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: frontend
+
+## ResourceQuota ##
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: pathnex-resource-quota
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 2Gi
+    limits.cpu: "4"
+    limits.momory: 4Gi
+
+## HorizontalPodAutoscaler ##
+
+apiVersion: autoscaling/v2
+kind: HortizontalPodAutoscaler
+metadata:
+  name: pathnex-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pathnex-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50

@@ -1,0 +1,146 @@
+YAML
+
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+## Service (Expose pods inside cluster)
+
+apiVersion: v1
+kind: service 
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+## type of service: ClusterIP (Internal) , NodePort, LoadBalancer.
+
+## ConfigMap (Store configuration)
+# Used for non-sensitive configuration data.
+
+YAML
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP ENV: production
+  APP_DEBUG: "false"
+## Pods can read these values as environment variables.
+
+## Secret (Store sensitive data)
+## Used for password, API keys, tokens.
+
+YAML
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: opaque
+data:
+  username: YWRtaW4=
+  password: cGFzc3dvcmQ=
+## Values must be base64 encoded
+
+## Pod (Basic workload unit)
+# Smallest deployable object 
+
+YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+## Usually Deployment is preferred instead of Pod directly.
+
+## Ingress ( External HTTP access)
+# Used to expose services via HTTP/HTTPS with domain routing.
+YAML
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress 
+metadata:
+  name: app-ingress
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+# Requires an ingress controoler like NGINX ingress controller
+
+## Namespace (Logical seperation)
+YAML
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+# Helps to organize environments: Dev staging :prod
+
+## Horizontal Pod Autoscaler (Auto scaling)
+YAML
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 2 
+  minReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+# Automatically scales pods based on CPU usage.
+# Most commonly used manifests in real projects
+# Deployment, Service, ConfigMap, Secret, Ingress, HorizontalPodAutoscaler, Namespace, PersistentVolume + PersistentVolumeClaim
+
+# Typical Kubernetes app structure 
+# k8s/
+     # namespace.yaml
+     # deployment.yaml
+     # service.yaml
+     # ingress.yaml
+     # configmap.yaml
+
+
+
+

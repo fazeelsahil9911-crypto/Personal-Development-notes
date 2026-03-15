@@ -1,0 +1,134 @@
+## Provider Configuration (provider.tf)
+# Defines which cloud provider Terraform will use ( AWS, Azure, GCP)
+
+HCL
+provider "aws" {
+  region = "us-east-1"
+}
+# purpose:- Connect terraform to a cloud platform.
+
+## Variables files (variables.tf)
+# Defines reusable variables.
+
+HCL
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  defualt     = "t2.micro"
+}
+variable "region" {
+  type = string
+}
+## Purpose: Makes code reusable and configurable.
+
+## Terraform Resource File (main.tf)
+# This is the main infrastructure definition.
+# Example: Create an EC2 instance.
+HCL
+resource "aws_instance" "web" {
+  ami           = "ami-123456"
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "Web-server"
+  } 
+}
+# Purpose: Defines infrastructure resources.
+
+## Terraform Resource File (main.tf)
+# This is the main infrastructure definition.
+# Example: Create an EC2 instance.
+
+HCL
+resource "aws_instance" "web" {
+  ami           = "ami-123456"
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "web-server"
+  }
+}
+# Purpose: Defines infrastructure resources.
+
+## Outputs File (output.tf)
+# Shows useful information after Terraform runs 
+
+HCL
+output "instance_public_ip" {
+  value = aws_instance.web.public_ip
+}
+# Purpose: Displays outputs like IP, URL or IDs.
+
+## Terraform Backend (backend.tf)
+# Defines where Terraform state is stored.
+# Example: store state in an S3 bucket.
+
+HCL
+terraform {
+  backend "s3" {
+    bucket = "terraform-state-bucket"
+    key    = "prod/terraform.tfstate"
+    region = "us-east-1"
+  } 
+}
+# Purpose: Enables remote state management.
+
+# Terraform variables values (terraform.tfvars)
+# Provides actual values for variables.
+HCL
+region        = "us-east-1"
+instance_type = "t2.micro"
+# Purpose: Se[erate configuration from code.
+
+## 7 Terraform Module Example
+# Modules organize infrastructure 
+
+HCL 
+module "vpc" {
+  source = "./modules/vpc"
+
+  cidr_block = "10.0.0.0/16"
+}
+# Purpose: Reusable infrastructure blocks.
+
+## 8 Example YAML Configuration Used with Terraform
+# Sometimes Terraform loads YAML config:
+
+YAML
+app:
+  name: myapp
+  replicas: 3
+  image: nginx
+# Terraform reads it like this:
+
+HCL 
+locals {
+  config = yamldecode(file("config.yaml"))
+}
+
+## Typical terraform project structure
+# Terraform/
+|-main.tf
+|-provider.tf
+|-variables.tf
+|-output.tf
+|-backend-tf
+|-terraform.tfvars
+|
+|_ modules/
+   |_ vpc/
+      |- main.tf
+      |- variables.tf
+      |- output.tf
+
+## Most common terraform resources used in DevOps
+# For Amazon Web Services environments:
+# aws_instance
+# aws_vpc
+# aws_subnet
+# aws_security_group
+# aws_lb
+# aws_s3_bucket
+# aws_iam_role
+
+# Summary - main.tf provider.tf variables.tf output.tf terraform.tfvars backend.tf modules/

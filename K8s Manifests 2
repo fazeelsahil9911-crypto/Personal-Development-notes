@@ -1,0 +1,231 @@
+## All manifests are written in YAML fpr practical usage.
+
+## 1 Namespace
+
+YAML
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+
+## 2 Pod
+
+YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  namespace: my-namespace
+spec:
+  containers:
+    - name: nginx
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+
+## 3 Deployment
+
+YAML
+apiVersion: apss/v1
+kind: Deployment
+metadata:
+  name: my-namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      lablels:
+        app: my-app
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+
+## 4 Service(ClusterIP / NodePort / LoadBalancer)
+## ClusterIP (Internal Access)
+
+YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+  namespace: my-namespace
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+## LoadBalancer (External Access)
+
+YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-lb-service
+  namespace: my-namespace
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+## 5 ConfigMap
+
+YAML
+apiVersion: v1
+kind: ConfiMap
+metadata:
+  name: my-config
+  namespace: my-namespace
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+
+## 6 Secret
+
+YAML
+apiVersion: v1
+kind: secret
+metadata:
+  name: my-secret
+  namespace: my-namespace
+type: Opaque
+data:
+  username: YWRtaW4=  # base64 encoded "admin"
+  password: cGFzcdvcmQ= # base64 encoded "password"
+
+## 7 Ingress
+
+YAML
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  namespace: my-namespace
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: myapp.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-service
+                port:
+                  number: 80
+
+## 8 Horizontal Pod Autoscaler (HPA)
+
+YAML
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-hpa
+  namespace: my-namespace
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name: my-deployment 
+  minReplicas: 2
+  maxReplicas: 5
+  metrics: 
+    - type: Resource
+      resource: 
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+
+## 9 PersistentVolume (PV) & PersistentVolumeClaim (PVC)
+# PersistentVolume
+
+YAML
+apiVersion: v1
+kind: PersistenVolume
+metadata:
+  name: my-pv
+  namespace: my-namespace
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadwriteOnce
+  PersistenVolumeReclaimPolicy: Retain
+  hostpath:
+    path: "/mnt/data"
+
+## PersistentVolumeClaim
+
+YAML
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+  namespace: my-namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+## 10 ServiceAccount + RBAC
+# ServiceAccount 
+
+YAML
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-sa
+  namespace: my-namespace
+
+## Role
+
+YAML
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: my-role
+  namespace: my-namespace
+rules:
+  - apiGourps: [""}
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "create", "delete"]
+
+## RoleBinding 
+
+YAML
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding 
+metadata:
+  name: my-rolebinding
+  namespace: my-namespace
+subjects:
+  - kind: ServiceAccount
+    name: my-sa
+    namespace: my-namespace
+roleRef:
+  kind: Role
+  name: my-role
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+
+

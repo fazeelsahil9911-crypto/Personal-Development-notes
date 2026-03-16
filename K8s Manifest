@@ -1,0 +1,193 @@
+# Namespace
+## Used to logically isolate resource.
+YAML
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-environment 
+
+## Deployment 
+# Manages stateless application pods with scaling and rolling updates.
+YAML
+
+apiVersion: apps/V1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: dev-environment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits: 
+            cpu: "500m"
+            memory: "512Mi"
+
+## Service 
+# Expose the deployment internally.
+
+YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: dev-environment 
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+## Other Common types: ClusterIP NodePort Loadbalancer
+
+## ConfigMap
+# Stores non-sensitive configuration.
+
+YAML
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: dev-environment 
+data: 
+  APP_ENV: production
+  APP_DEBUG: "false"
+  LOG_LEVEL: info
+# use in deployment:
+
+YAML
+envFrom:
+- configMapRef:
+    name: app-config
+
+## 5/ Secret Stores sensitive data like passwords or API keys.
+
+YAML
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+  namespace: dev-environment 
+type: Opaque
+data:
+  DB_PASSWORD: cGFzc3dvmQxMjM= # base65 encoded
+# Usage in deployment:
+
+YAML
+env:
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: app-secret
+      key: DB_PASSWORD
+
+## 6 Ingress - Exposes HTTP/HTTPS routes to services.
+
+YAML
+apiVersion: networking.k8s.io/v1
+kind: Ingress 
+metadata:
+  name: nginx-ingress
+  namespace: dev-environment 
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: myapp.example.com
+    http: 
+      paths:
+      - path: /
+        pathType: Prefix
+        beckend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+## Requires an Ingress Controller (NGINX, traefik, ALB).
+
+## 7. HorizontalPodAutoscaler (HPA) # Automatically scales pods based on CPU or memory.
+
+YAML
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: 
+  name: nginx-hpa
+  namespace: dev-envrionment
+spec:
+  scaleTargetRef:
+    apiVersion: apss/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+## 8 PersistentVolume (PV) Represents physical storage in the cluster.
+
+YAML
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/app
+
+## 9 PersistenVolumeClaim (PVC) Requests storage from PV.
+
+YAML
+apiVersion: v1
+kind: PersistenVolumeClaim
+metadata:
+  name: app-pvc
+  namespace: dev-environment
+spec: 
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+# Usage in Deployment 
+
+YAML
+volumeMounts:
+- mountPath: "/usr/share/nginx/html"
+  name: app-storage
+
+volumes:
+- name: app-storage
+  persistenVolumeClaim:
+    ClaimName: app-pvc
+
+
+
+

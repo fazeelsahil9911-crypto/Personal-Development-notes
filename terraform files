@@ -1,0 +1,124 @@
+## Bash
+
+terraform-k8s/
+    main.tf
+    providers.tf
+    variables.tf
+    outputss.tf
+    terraform.tfvars
+    backend.tf
+    locals.tf
+    data.tf
+    modules/
+        namespace/
+            main.tf
+            variables.tf
+            output.tf
+        app/
+            main.tf
+            variables.tf
+            output.tf
+     yaml/
+        deployment.yaml
+        service.yaml
+        ingress.yaml
+
+## providers.tf
+hcl
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
+
+provider "local" {}
+
+## backend.tf (Remote state example)
+hcl
+
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"
+    key            = "k8s/terraform.tfstate"
+    region         = "ap-south-1"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}
+
+## variables.tf
+hcl
+
+variable "namespace" {
+  default = "demo-app"
+}
+
+variables "app_name" {
+  default = "demo"
+}
+
+variable "image" {
+  defualt = "nginx:latest"
+}
+
+## terraform.tfvars
+hcl
+
+namespace = "demo-app"
+app_name  = "demo"
+image     = "nginx:1.25"
+
+locals.tf
+hcl
+
+locals {
+  common_labels = {
+    app = var.app_name
+    env = "dev"
+  }
+}
+
+data.tf (YAML + Cluster info)
+hcl
+
+# Read YAML file
+data "local_file: :deployment_yaml" {
+  filename = "${path.module/yaml/deployment.yaml"
+}
+
+# Decode YAML
+locals {
+  deployment_manifest = yamldecode(data.local_file.deployment_yaml.content)
+}
+
+# Example: Get cluster info
+data "kubernetes_namespace" "defualt" {
+  metadata {
+    name = "default"
+  }
+}
+
+main.tf (Root)
+hcl
+
+module "namespace" {
+  source    = "./modules/namespace"
+  name      = var.namespace
+}
+
+module "app" {
+  source     = "./modules/app"
+  namespace  = var.namespace
+  app_name   = var.app_name
+  image      = var.image
+}
+
+## Outputs.tf
+hcl
+
+output "namespace" {
+  value = module.namespace.name
+}
+
+output "app_name" {
+  value = module.app.app_name
+}
+

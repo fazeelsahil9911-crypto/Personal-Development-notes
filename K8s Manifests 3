@@ -1,0 +1,246 @@
+## 1. Namespace
+
+YAML
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-app
+
+## 2. Secret
+
+YAML
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-secret
+  namespace; demo-app
+type: Opaque
+data:
+  username: ZGVtbw== # demo (base64)
+  password: cGFzcw== # pass (base64)
+
+## 3. ConfigMap
+
+YAML
+
+apiVersion:
+kind: ConfigMap
+metadata:
+  name: demo-config
+  namespace: demo-app
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+
+##  4. ServiceAccount
+
+YAML
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-sa
+  namespace: demo-app
+
+## 5. RBAC (Role + RoleBinding)
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: demo-app
+  name: demo-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get:, "watch", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: demo-rolebinding
+  namespace: demo-app
+subjects:
+- kind: ServiceAccount
+  name: demo-sa
+  namespace: demo-app
+roleRef:
+  kind: Role
+  name: demo-role
+  apiGroup: rbac.authorization.k8s.io
+
+## 6. Persistent Volume (PV)
+
+YAML
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: demo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostpath:
+    path: /tmp/demo-data
+
+## 7. Persistent Volume Claim (PVC)
+
+YAML
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-pvc
+  namespace: demo-app
+spec:
+  accessModes: 
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+## 8. Pod (Basic Example)
+
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-pod
+  namespace: demo-app
+  labels:
+    app: demo
+spec:
+  serviceAccountName: demo-sa
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+      - containerPort: 80
+
+## 9. Deployment 
+
+YAML
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: demo-deployment
+  namespace: demo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      serviceAccountName: demo-sa
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports: 
+          - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: demo-config
+        - secretRef:
+            name: demo-secret
+        volumeMounts:
+        - name: demo-storage
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: demo-storage
+        persistentVolumeClaim:
+          claimName: demo-pvc
+
+## 10. Service 
+
+YAML
+
+apiVersion: v1
+kind: Service 
+metadata:
+  name: demo-service
+  namespace: demo-app
+spec:
+  selector: 
+    app: demo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+## 11. Ingress 
+
+YAML 
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+  namespace: demo-app
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: demo.local
+    http:
+      paths:
+      - path: /
+        pathType: prefix
+        backend:
+          service:
+            name: demo-service
+            port:
+              number: 80
+
+## 12. Horizontal Pod Autoscaler (HPA)
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: demo-hpa
+  namespace: demo-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    nameL demo-deployment 
+  minReplicas: 2
+  maxReplicas: 5
+  metrics: 
+  - type: Resource
+    resource: 
+      name: cpu
+      target:
+        type: Utilization 
+        averageUtilization: 50
+
+## 13. PodDisruptionBudget (PDB)
+
+YAML
+
+apiVersion: policy/v`
+kind: PodDisruptionBudget
+metadata:
+  name: demo-pdb
+  namespace: demo-app
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: demo
+
+## how to apply kubectl apply -f k8s.yaml
+
+
+
+

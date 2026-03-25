@@ -1,0 +1,362 @@
+modules/
+  vpc/
+    main.tf
+    variables.tf
+    output.tf 
+
+HCL 
+
+module "vpc" {
+  source = "./modules/vpc"
+  cidr_block = "10.0.0.0/16"
+}
+
+## Deploymentset 
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: nginx-deployment 
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx.1.21
+        ports:
+        - containerPort: 80
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata: 
+  name: demo-deployment 
+  labels:
+    app: demo 
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+      - name: nginx
+        image:
+        ports:
+        - containerPort:
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: nginx-deloyment 
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+  spec:
+    container:
+    - name: nginx
+      image:
+      ports:
+      - containerPort:
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+   name: nginx-deployment 
+   labels:
+     app: nginx
+spec:
+   replicas: 2
+   selector:
+     matchLabels:
+       app: nginx
+   template:
+     metadata:
+       labels:
+         app: nginx
+   spec: 
+     containers:
+     - name: nginx
+       image: 
+       port:
+       - containerPort
+
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: nginx-deployment 
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+  template:
+    metadata:
+      labels:
+        app: nginx
+  spec:
+    containers:
+    - name: nginx
+      port: 
+      - containerPort
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+   name: nginx-deployment 
+   labels: 
+     app: nginx
+spec:
+   replicas: 2
+   selector:
+     matchLabels:
+   template:
+     metadata:
+       labels:
+         app: nginx
+   spec:
+     containers:
+     - name: 
+       image:
+       port:
+       - containerPort:
+
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: nginx-deployment 
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+  template:
+    metadata:
+    labels:
+      app:
+  spec:
+    containers:
+    name:
+    image:
+    port:
+    - containerPort:
+
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: nginx-deployment 
+  labels:
+    app: nginx
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+     app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+  spec:
+    containers:
+    - name: 
+      image: 
+      port:
+      - containerPort:
+
+apiVersiom: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name: nginx-deployment 
+minReplicas: 2
+masReplicas: 10
+metrics:
+- type: Resource
+  resource:
+    name: cpu
+    target:
+      type: Utilization
+      averageUtilization: 50
+
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name: nginx-deployment 
+minReplicas: 2
+maxReplicas: 10
+metrics:
+- type: Resource
+  resource:
+    name: cpu
+    target:
+      type: Utilization 
+      averageUtilization: 
+
+
+apiVersion: autoscaling/v2
+kind: hpa
+metadata:
+  name: nginx-hpa
+spec:
+  scaletargetRef:
+    apiversion: apps/v1
+    kind: deployment 
+    name: nginx-deployment 
+minReplicas: 2
+maxReplicas: 10
+metrics
+- type - resource
+  resource:
+    name: cpu 
+    target:
+      type: Utilization 
+      averageUtilization:
+
+apiVersion: autoscaling/v2
+kind: HPA
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name: nginx-deployment 
+minReplicas: 2
+maxReplicas: 10
+metrics:
+- type: resource
+  resource:
+    name: cpu
+    target:
+      type: Utilization
+      avgerageUtilization:
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-example
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/data
+
+apiVersio: apps/v1
+kind: PersistentVolume
+metadata:
+  name: pv-example
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain  
+  hostPath:
+    path: /mnt/data
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-example
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage:
+
+YAML
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  IMAGE_NAME: 
+  IMAGE_TAG:
+
+build-job:
+  stage: build
+  image: docker.latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker save $IMAGE_NAME:$IMAGE_TAG > nginx.tar
+  artifacts:
+    paths: 
+      - nginx.tar
+
+test-job:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker load < nginx.tar
+    - docker run -d -p 8080:80 --name nginx-test $IMAGE_NAME:$IMAGE
+    - sleep 5
+    - curl -f http://localhost:8080 || exit 1
+  dependencies:
+    - build-job
+
+deploy-job:
+  stage: deploy
+  script:
+    - echo "Deploying NGINX container..."
+    - ./scripts/deploy_nginx.sh
+  only:
+    - main
+
+## Groovy 
+
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "my-nginx-app"
+        IMAGE_TAG
+    }
+}
+   
+    
+

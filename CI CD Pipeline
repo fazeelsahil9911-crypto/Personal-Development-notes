@@ -1,0 +1,93 @@
+## Groovy
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/exmaple/repo
+            }
+        }
+
+        stage('Build) {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                sh '''
+                docker build -t myapp:latest .
+                docker tag myapp:latest <account id>.dkr.ecr.us-east-1.a
+                docker push <account_id>.dkr.ecr.us-east-1.amazonaws.com
+                '''
+            }
+        }
+    }
+}
+
+## AZURE DevOps Pipeline (YAML - azure-pipelines.yml)
+
+YAML
+
+trigger:
+  branches:
+    include:
+      - main
+pool:
+  vmImage: 'Ubuntu-latest'
+
+steps:
+- task: GitClone@1
+  inputs:
+    repository: https://github.com/example/repo.git
+
+- task: Maven@3
+  inputs:
+    goals: 'clean package'
+
+- task: Maven@3
+  inputs:
+    goals: 'test'
+
+- task: Docker@2
+  inputs:
+    command: buildAndPush
+    repository: myapp
+    dockerfile: '**/Dockerfile'
+    conrainerRegistry: myacr.azurecr.io
+    tags: latest
+
+## GitLab CI/CD (YAML - .gitlab-ci.yml)
+
+YAML
+
+stages:
+  - build
+  - test
+  - docker
+
+build:
+  stage: build
+  script:
+    - mvn clean package
+
+test:
+  stage: test
+  script:
+    - mvn test
+
+docker-build
+  stage: docker
+  script:
+    - docker build -t myapp:latest .
+    - docker tag myapp:latest registry.gitlab.com/mygroup/myapp:latest
+    - docker push registry.gitlab.com/mygroup/myapp:latest

@@ -1,0 +1,237 @@
+##   Dockerfile
+
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["nmp", "start"]
+
+## Multi-stage Dockerfile
+# Build Stage
+FROM node:18 AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Production stage 
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app ./
+EXPOSE 3000
+CMD ["npm", "start"]
+
+## Namespace
+YAML
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+
+## Deployment 
+YAML
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node
+  template:
+    metadata:
+      labels:
+        app: node
+    spec:
+      containers:
+      - name: node
+        image: node-app:latest
+        ports:
+        - containerPort: 3000
+
+## Service
+YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-service
+  namespace: dev
+spec:
+  type: ClusterIP
+  selector:
+    app: node
+  ports:
+  - port: 80
+    targetPort: 3000
+
+## ConfigMap + Secret
+
+YAML
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: dev
+data:
+  ENV: "dev"
+
+YAML
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+  namespace: dev
+type: Opaque
+data:
+  PASSWORD: # base64
+
+## Ingress
+YAML
+metadata:
+  name: app-ingress
+  namespace: dev
+spec:
+  rules:
+  - host: myapp.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: node-service
+            port:
+              number: 80
+
+## Advanced Kubernetes
+# HPA (Autoscaling)
+YAML
+  namespace: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name: node-app
+minReplicas: 2
+maxReplicas: 5
+metrics:
+- type: Resource
+  resource:
+    name: cpu
+    target:
+      type: Utilization
+      averageUtilization: 70
+
+## Persistent Volune + PVC
+YAML
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostpath:
+    path: /data
+
+YAML
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc
+  namespace: dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+## RBAC + ServiceAccount + PDB
+# ServiceAccount
+YAML
+metadata:
+  name: app-sa 
+  namespace: dev
+
+# Role + Binding
+YAML
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dev
+  name: app-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+
+## Pod Disruption Budget
+YAML
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: pdb
+  namespace: dev
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: node
+
+## Terraform Concepts
+## Key Topics to practice
+# Variable / Outputs
+hcl
+variable "region" {}
+output "instance_ip" {}
+
+Data Sources
+hcl
+data "aws_ami" "latest" {
+  most_recent = true
+}
+
+## Real-world pattern
+GitLab CI example
+YAML
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    - docker build -t app .
+    - docker push app
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl apply -f k8s/
+
+Jenkins (Groovy Pipeline)
+pipeline {
+  agent any
+  stages {
+    stage('Build') {
+      steps {
+        sh 'docker build -t app .'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        sh 'kubectl apply -f k8s/'
+      }
+    }
+  }
+}
+
+
+
+
+

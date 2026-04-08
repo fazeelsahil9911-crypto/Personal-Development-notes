@@ -1,0 +1,290 @@
+## Pod
+
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+## Deployment 
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: nginx-deployment 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+
+## Service (ClusterIP)
+# YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+
+## ConfigMap
+YAML
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+
+## Secret
+
+YAML
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+data:
+  username:
+  password:
+
+## Deployment using ConfigMap & Secret
+YAML
+
+ containers:
+- name: app-container
+  image: busybox
+  command: ["sh", "-c", "env && sleep 3600"]
+  env:
+  - name: APP_ENV
+    valueFrom:
+      configMapKeyRef:
+        name: app-config
+        key: APP_ENV
+  - name: USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: app-secret
+        key: username
+
+## Persistent Volume (PV)
+
+YAML
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostpath:
+    path: /mnt/data
+
+## Persistent Volume Claim (PVC)
+
+YAML
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+
+## Deployment with Volume Mount 
+
+YAML
+
+template:
+  metadata:
+    labels:
+      app: volume-app
+  spec:
+    containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+      - mounthPath: "/usr/share/nginx/html"
+        name: storage
+    volume:
+    - name: storage
+      persistentVolumeClaim:
+        claimName: pvc-claim
+
+## Ingress (Advanced)
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+spec:
+  rules:
+  - host: myapp.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+
+## Horizontal Pod Autoscaler (HPA)
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginc-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name: nginx-deployment 
+  minReplicas: 2
+  maxReplicas: 5 
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+
+## terraform modules
+
+Hcl
+
+module "iam_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role"
+  version = "~> 5.0"
+
+  name               = "practice-role"  
+  assume_role_policy = data.aws_iam_policy_document.assument.json
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+  ]
+}
+
+module "iam_role" {
+   source  =
+   version =
+
+   name    =
+   assume_role_policy  =
+   managed_policy_arns = [  aws:policy  ]
+}
+
+## EC2 Module
+
+Hcl
+module "ec2_instance" {
+  source  =
+  version =
+
+  name          =  "practice-ec2"
+  instance_type =  "t3.micro"
+  ami           =  "ami
+  subnet_id     =  module.vpc.public_subnets[0]
+  vpc_security_group_ids = []
+}
+
+VPC Module
+
+Hcl
+module "vpc" {
+  source  = 
+  version =
+
+  name = 
+  cidr =
+
+  azs             = ["us-east-1a" "us-east-1b"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets = ["10.0.3.0/24", "10.0.4.0/24"]
+
+  enable_nat_gateway = true
+  enable_dns_hostnames = true
+}
+
+Hcl 
+
+module "s3_bucket
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 5.0"
+
+  bucket = "practice-bucket${random_pet.name.id}"
+  acl    = "private"
+
+  versioning = {
+    enabled = true
+  }
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm =
+      }
+    }
+  }
+}
+
+Hcl 
+
+module "eks" {
+  source  =
+  version =
+
+  cluster_name    =
+  cluster_version =
+  subnets         =
+  vpc_id          =
+
+  manage_aws_auth = true
+
+  node_groups = {
+    defualt = {
+      desired_capacity = 2
+      max_capacity     = 3
+      min_capacity     = 1
+
+     instance_types    = ["t3.medium"]
+    }
+  }
+}
+
+
+

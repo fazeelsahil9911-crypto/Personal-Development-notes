@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: demo-deployment 
+spec:
+  replicas: 2
+  selector:  
+    matchLabels:
+      app: 
+  template"
+    metadata:
+      labels:
+        app:
+    spec:
+      container:
+      - name: 
+        image:
+        ports:
+        - containerPort
+
+## Service(ClusterIP + NodePort)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp
+  ports:
+  - port: 
+    targetPort: 
+
+YAML
+
+apiVersion: v1
+kind: Service 
+metadata:
+  name: app-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: myapp
+  ports:
+  - port: 
+    targetPort:
+    nodePort:
+
+## ConfigMap
+
+YAML 
+
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: app-config
+data:
+  ENV: production
+  LOG_LEVEL: info
+
+## Secret
+
+YAML
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+data: 
+  password:
+
+## Ingress
+
+YAML 
+
+apiVersion: networking.K8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+spec:
+  rules:
+  - host: myapp.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service 
+            port:
+              number:
+
+## Persistent Volume Claim (PVC)
+
+YAML
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+## Deployment with Volume (DB use case)
+
+YAML
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app: db 
+  template:
+    metadata:
+      labels:
+        app: db 
+    spec:
+      container:
+      - name: mysql
+        image: mysql:8
+        volumeMounts:
+        - mounthPath: /var/lib/mysql
+          name: db-storage
+      volumes:
+      - name: db-storage
+        persistentvolumeClaim:
+          claimName: app-pvc
+
+## Liveness & Readiness probes 
+
+YAML 
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initalDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initalDelaySeconds: 2
+  periodSeconds: 5
+
+## Horizontal Pod Autoscaler (HPA)
+
+YAML
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kindL app
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization 
+        averageUtilization:
+

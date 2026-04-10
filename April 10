@@ -1,0 +1,336 @@
+## Namespace 
+
+YAML
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+
+## Deployment 
+
+YAML
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+   name: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels: 
+      app: 
+  template:
+    metadata:
+      labels:
+        app: 
+  spec:
+   containers:
+   - name:
+     image:
+     port:
+     - containerPort
+
+YAML Configmap.yaml
+
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: prod
+data:
+  NODE_ENV: "production"
+  APP_PORT: "3000"
+
+YAML Secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+  namespace: prod
+type: Opaque
+data:
+  DB_PASSWORD: 
+
+## Serviceaccount-rbac.yaml
+YAML
+apiVersion: v1
+kind: ServiceAccount 
+metadata:
+  name: app-sa
+  namespace: prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: prod
+  name: app-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services"]
+  verbs: ["get", "list"]
+---
+
+## Deployment.yaml
+YAML
+ limits:
+   cpu: "500m"
+   memory: "512Mi"
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+livenessProbe: 
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 15
+  periodSeconds: 20
+
+## Service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: prod
+spec:
+ type: ClusterIP
+ selector:
+   app: myapp
+ port:
+ - port: 80 
+   targetPort: 3000
+
+## Ingress.yaml
+YAML
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths: 
+      - path: /
+        pathType: Prefix
+        backend: 
+          sercice:
+            name: app-service
+            port:
+              number:
+
+hpa.yaml
+
+YAML
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+  namespace: prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: deployment 
+    name: app-deployment 
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: CPU
+      target:
+        type: Utilization 
+        averageUtilization:
+
+pvc.yaml
+YAML
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-pvc
+  namespace: prod
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+pdb.yaml
+YAML
+apiVersion: policy.v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-pdb
+  namespace: prod
+spec:
+  minAvaiable: 1
+  selector:
+    matchLabels:
+      app: myapp
+
+## Terraform Full templates
+
+# Provider.tf
+hcl 
+provider "aws" {
+  region = var.region
+}
+
+## Variable.tf
+hcl 
+variable "region" {
+  default = "us-east-1"
+}
+
+variable "instance_type" {
+   default = "t3.micro"
+}
+
+## main.tf
+
+resource "aws_instance" "app" {
+  ami           = data.aws_ami.latest.id
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "app-instance"
+  }
+}
+
+## Data.tf
+hcl
+
+data "aws_ami" "latest" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm*"] 
+  }
+}
+
+## Output.tf
+hcl 
+output "instance_id" {]
+  value = aws_instance.app.id 
+}
+
+## backend.tf
+hcl
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "prod/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock"
+  }
+}
+
+## Gitlab 
+# .gitlab-ci.yml
+YAML
+build:
+  stage: build
+  script:
+    - docker build -t $IMAGE:$CI_COMMIT_SHA .
+
+push: 
+  stage: push 
+  script:
+    - docker push $IMAGE:$CI_COMMIT_SHA
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl apply -f k8s/
+
+## groovy 
+
+pipeline {
+   agent any 
+
+   environment 
+     IMAGE = "myrepo/myapp"
+   }
+
+   stages {
+     stage('checkout') {
+       steps {
+         git 'https//github.com/repo-git'
+       }
+     }
+
+    stage('Buid') {
+      steps {
+        sh 'docker build -t $IMAGE .'
+      }
+    }
+
+    stage('Push') {
+      steps {
+        sh 'docker push $IMAGE
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        sh 'kubectl apply -f k8s/'
+      }
+    }
+  }
+} 
+
+## Docker Full templates
+
+# Dockerfile
+FROM node:18
+WORKDIR /app
+COPY
+RUN
+COPY . .
+EXPOSE
+CMD
+
+## Multi stage dockerfile
+
+FROM node: 18
+WORKDIR /app
+COPY . . 
+RUN 
+
+FROM nginx:alpine
+COPY 
+EXPOSE
+
+## JSON
+
+{
+   "version": 4,
+   "terraform_version": 1.6.0",
+   "serial": 1, 
+   "lineage": 
+   "outputs": {
+     "instance_id": {
+      "value":
+      "type":
+     }
+   },
+   "resources": [
+     {
+   ]
+}
+
+
+
+
+

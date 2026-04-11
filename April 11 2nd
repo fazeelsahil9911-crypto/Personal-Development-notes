@@ -1,0 +1,120 @@
+## Web-ingress
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: exam
+spec:
+  rules:
+  - host:
+    http:
+      paths:
+      - path:
+        pathType:
+        backend:
+
+## YAML
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: exam
+spec:
+  rules:
+  - host: exam.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+           service:
+             name: web-service
+             port: 
+               number: 80
+
+## dockerfile
+
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "app.js"]
+
+# stage 1: Build
+FROM node:18 as builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+# stage 2: Production
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app /app
+
+EXPOSE 3000
+
+CMD ["node", "app.js"]
+
+
+## .gitlab-ci.yaml
+YAML
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME: my-app
+
+build:
+  stage: build
+  script:
+    - docker build -t $IMAGE_NAME .
+    - docker tag $IMAGE_NAME $CI_REGISTRY/$IMAGE_NAME
+    - docker push $CI_REGISTRY/$IMAGE_NAME
+depoy:
+  stages: deploy
+  script:
+    - kubectl set image deployment/web-app web=$IMAGE_NAME
+
+# Provider
+Provider "aws" {
+  region = "ap-south-1"
+}
+
+# Backend (Remote state)
+terraform {
+  backend "s3" {
+    bucket        = "my-terraform-state"
+    key           = "dev/terraform.tfstate"
+    region        = "ap-south-1"
+    dynamo_table  = "terraform-lock"
+  }
+}
+
+# Variable
+variable "instance_type" {
+   default = "t2.micro"
+}
+
+# Resource 
+resource "aws_instance" "example" {
+  ami            = "ami-0c55b159cbfafe1f0"
+  instance_typee = var.instance_type
+}
+
+# Output
+output "public_ip" {
+  value = aws_instance.example.public_ip
+}
+
+

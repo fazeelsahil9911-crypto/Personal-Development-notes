@@ -1,0 +1,68 @@
+## Terraform meta arguments
+
+# 1. Depends_on
+
+resource "aws_iam_role" "eks_role" {
+  name = "eks-role"
+  assume_role_policy = data.aws_iam_policy_document.eks_assume.json
+}
+
+resource "aws_eks_cluster" "demo" {
+  name     = "demo"
+  role_arn = aws_iam_role.rks_role.arn
+  depends_on = [aws_iam_role.eks_role] # ensures IAM role is ready first
+}
+
+resource "aws_instance" "web" {
+ count          = 3
+ ami            = "ami-123456"
+ instance_type  = "t2.micro"
+}
+## Creates 3 EC2 instances. You can reference them with aws_instance.web[0],aws_instance.web[1],etc.
+
+## for_each 
+
+resource "aws_s3_bucket" "buckets" {
+  for_each = toset(["logs", "images", "backups"])
+  bucket   = "my-${each.key}-bucket"
+}
+
+## creates 3 buckets: my-logs-bucket, my-images-bucket, my-backups-bucket,
+# you can reference them as aws_s3_bucket.buckets["logs"].
+
+## lifecycle
+
+resource "aws_s3_bucket" "important" {
+  bucket = "critical-data"
+  lifecycle {
+    prevent_destroy = ture
+    ignore_changes  = [tags]
+  }
+}
+## Bucket cannot be destroyed, and tag changes won't trigger a redeploy.
+
+## provider.
+
+provider "aws" {
+  alias  = "prod"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "dev"
+  region = "us-west-2"
+}
+
+resource "aws_instance" "prod_app" {
+  provider      = aws.prod
+  ami           = "ami-123456"
+  instance_type = "t2.micro"
+}
+## this EC2 instance will be created in the prod account/region.
+
+## depends_on - enforce order.
+## count - create N identical resource.
+## for_each - create resources from a set/map with unique keys.
+## lifecycle - control create/update/destroy behavior.
+## provider - choose which provider config to use.
+
